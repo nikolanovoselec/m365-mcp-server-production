@@ -52,6 +52,10 @@ sequenceDiagram
     W-->>C: 13. OAuth access token for MCP session
 ```
 
+- Change vs upstream: the original flow skipped the Access perimeter and stored tokens immediately. Production
+  requires the Access cookie before hitting `/authorize` and logs Access headers alongside Microsoft tokens.
+  See upstream diagram: https://github.com/nikolanovoselec/m365-mcp-server/blob/main/TECHNICAL.md#oauth-flow-architecture
+
 ### AI Gateway Egress
 
 ```mermaid
@@ -68,6 +72,9 @@ sequenceDiagram
     G-->>W: 5. Response + `aiGatewayLogId`
     W->>DO: 6. Tool result (logs metadata + log ID)
 ```
+
+- Change vs upstream: calls now route through AI Gateway instead of direct `fetch`, enabling policy enforcement
+  and log correlation. Upstream sequence: https://github.com/nikolanovoselec/m365-mcp-server/blob/main/TECHNICAL.md#microsoft-graph-integration
 
 1. **Cloudflare Access** acts as checkpoint #1 (perimeter). Requests without a valid Access token never
    reach the Worker. Identity, device posture, and service token claims can be surfaced through headers

@@ -1,0 +1,60 @@
+# Cloudflare Workers Configuration - Example Template
+# Copy this to wrangler.toml and replace placeholders with actual values
+
+name = "your-mcp-server-name"
+main = "src/index.ts"
+compatibility_date = "2024-11-05"
+compatibility_flags = ["nodejs_compat"]
+
+# Replace with your Cloudflare account ID before deploying.
+account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+
+[[ai]]
+binding = "AI"
+# Provide the AI Gateway identifier created in Cloudflare (credentials supplied via wrangler secret).
+id = "YOUR_AI_GATEWAY_ID"
+
+# Custom domain routing (optional)
+routes = [
+  { pattern = "your-worker-domain.com", custom_domain = true }
+]
+
+# Deployment configuration
+WORKER_DOMAIN = "your-worker-name.your-subdomain.workers.dev"
+PROTOCOL = "https"
+
+# Durable Objects for session and token management
+[[durable_objects.bindings]]
+name = "MCP_OBJECT"
+class_name = "MicrosoftMCPAgent"
+
+# KV Namespaces
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "YOUR_OAUTH_KV_NAMESPACE_ID"
+preview_id = "YOUR_OAUTH_KV_PREVIEW_ID"
+
+[[kv_namespaces]]
+binding = "CONFIG_KV"
+id = "YOUR_CONFIG_KV_NAMESPACE_ID"
+preview_id = "YOUR_CONFIG_KV_PREVIEW_ID"
+
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "YOUR_CACHE_KV_NAMESPACE_ID"
+preview_id = "YOUR_CACHE_KV_PREVIEW_ID"
+
+# Secrets (deploy via: wrangler secret put SECRET_NAME)
+# - MICROSOFT_CLIENT_ID
+# - MICROSOFT_TENANT_ID
+# - GRAPH_API_VERSION
+# - MICROSOFT_CLIENT_SECRET
+# - ENCRYPTION_KEY  
+# - COOKIE_SECRET
+# - COOKIE_ENCRYPTION_KEY
+# - AI_GATEWAY_SERVICE_TOKEN (if required by policy)
+
+# Migration Information
+[[migrations]]
+tag = "v1"
+new_classes = ["MicrosoftMCPAgent"]

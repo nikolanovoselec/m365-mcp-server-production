@@ -3,7 +3,8 @@
 
 name = "your-mcp-server-name"
 main = "src/index.ts"
-compatibility_date = "2024-11-05"
+# Pin to the most recent deployment date you have validated; bumping keeps Worker APIs current.
+compatibility_date = "2025-10-24"
 compatibility_flags = ["nodejs_compat"]
 
 # Replace with your Cloudflare account ID before deploying.
@@ -19,10 +20,6 @@ routes = [
   { pattern = "your-worker-domain.com", custom_domain = true }
 ]
 
-# Deployment configuration
-WORKER_DOMAIN = "your-worker-name.your-subdomain.workers.dev"
-PROTOCOL = "https"
-
 # Durable Objects for session and token management
 [[durable_objects.bindings]]
 name = "MCP_OBJECT"
@@ -33,16 +30,6 @@ class_name = "MicrosoftMCPAgent"
 binding = "OAUTH_KV"
 id = "YOUR_OAUTH_KV_NAMESPACE_ID"
 preview_id = "YOUR_OAUTH_KV_PREVIEW_ID"
-
-[[kv_namespaces]]
-binding = "CONFIG_KV"
-id = "YOUR_CONFIG_KV_NAMESPACE_ID"
-preview_id = "YOUR_CONFIG_KV_PREVIEW_ID"
-
-[[kv_namespaces]]
-binding = "CACHE_KV"
-id = "YOUR_CACHE_KV_NAMESPACE_ID"
-preview_id = "YOUR_CACHE_KV_PREVIEW_ID"
 
 # Secrets (deploy via: wrangler secret put SECRET_NAME)
 # - MICROSOFT_CLIENT_ID

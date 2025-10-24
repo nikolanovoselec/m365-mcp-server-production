@@ -46,7 +46,8 @@ clear ingress controls, governed egress, and auditable operations.
 2. **Deploy AI Gateway** – create `m365-egress-gateway`, enable logging/rate limiting/DLP,
    and define the required dynamic routes (e.g., `dynamic/microsoft-graph-handler`).
 3. **Refactor Configuration & Secrets** – bind the gateway via `[[ai]]`, remove `[vars]`,
-   and push all credentials using `wrangler secret put`.
+  populate the placeholder IDs in `wrangler.toml`, and push all credentials using
+  `wrangler secret put`.
 4. **Update Source Code** – replace direct `fetch` invocations with `env.AI.run(...)`,
    attach `gateway.metadata` (user identifiers, MCP tool name, correlation IDs),
    and centralise error handling for Access or gateway denials.

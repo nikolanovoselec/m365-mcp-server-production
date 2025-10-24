@@ -37,8 +37,7 @@ wrangler secret put COOKIE_SECRET
 wrangler secret put AI_GATEWAY_SERVICE_TOKEN   # if using service-token policies
 ```
 
-`wrangler.toml` ships with an `[[ai]]` binding. Cloudflare injects the gateway credentials at runtime;
-no additional environment variables are necessary for the binding itself.
+`wrangler.toml` now ships with placeholders for account, AI Gateway, KV IDs, and the production domain alongside the required `[[ai]]` binding. Replace each value before deployment and rely on `wrangler secret put` for every sensitive field (including `GRAPH_API_VERSION`).
 
 ## 3. Migration Phases
 

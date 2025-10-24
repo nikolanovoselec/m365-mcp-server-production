@@ -19,6 +19,11 @@ stateDiagram-v2
     Worker --> [*] : Tool result to MCP client
 ```
 
+*Change vs upstream:* the original worker exposed `/sse` directly and called Microsoft Graph with inline
+`fetch` statements. Production inserts Cloudflare Access ahead of the Worker and hands every outbound call
+to AI Gateway for policy enforcement and auditing. Upstream reference:
+https://github.com/nikolanovoselec/m365-mcp-server/blob/main/TECHNICAL.md#system-overview
+
 ### Access + OAuth Flow
 
 ```mermaid

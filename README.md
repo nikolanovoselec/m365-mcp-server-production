@@ -65,6 +65,18 @@ clear ingress controls, governed egress, and auditable operations.
 - `src/` – Worker source aligned with the hardened environment.
 - `wrangler.toml` – Production configuration (AI binding, Durable Object, Access-friendly routes).
 
+## Transformation Summary
+
+Around 260 lines of worker code (spread across `src/index.ts`, `src/microsoft-graph.ts`, and
+`src/microsoft-mcp-agent.ts`) were adjusted, alongside a handful of Cloudflare console changes, to
+turn the open prototype into an enterprise-hardened Microsoft 365 Remote MCP Server. Security controls added:
+
+- **Cloudflare Access perimeter** – `/sse` now sits behind SSO/MFA/device posture, and Access headers reach the Durable Object for auditing.
+- **Cloudflare AI Gateway egress** – Every Graph call flows through dynamic routes with policy enforcement, logging, and DLP.
+- **Secret lifecycle via wrangler** – No credentials in `[vars]`; secrets are stored/rotated with `wrangler secret put`.
+- **Durable Object correlation** – Tool executions log the Cloudflare `aiGatewayLogId`, linking MCP activity to Gateway telemetry.
+- **Configuration hygiene** – Example configs rely on placeholders and current compatibility dates; production `wrangler.toml` consumes secrets exclusively.
+
 ## Migration Roadmap
 
 1. **Provision Cloudflare Access** – create a self-hosted application guarding `mcp.<domain>`
@@ -101,6 +113,7 @@ flowchart LR
 - Cloudflare docs – [Dynamic routing](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/)
 - Cloudflare docs – [Access linked apps for MCP servers](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/mcp-servers/linked-apps/)
 - Cloudflare GitHub – [AI Gateway MCP server](https://github.com/cloudflare/mcp-server-cloudflare/tree/main/apps/ai-gateway) (log tooling & OAuth patterns)
+- Cloudflare docs – [Durable Objects](https://developers.cloudflare.com/durable-objects/) (stateful session management)
 
 ## Contributing
 

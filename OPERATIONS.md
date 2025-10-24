@@ -42,6 +42,26 @@ no additional environment variables are necessary for the binding itself.
 
 ## 3. Migration Phases
 
+```mermaid
+sequenceDiagram
+    participant Eng as Engineering
+    participant Access as Cloudflare Access
+    participant Gateway as AI Gateway
+    participant Worker as MCP Worker
+    participant Apps as Internal Apps
+
+    Eng->>Access: Create SaaS app + policies
+    Access-->>Eng: SaaS app ID
+    Eng->>Apps: Add linked_app_token rule<br/>with SaaS app ID
+    Eng->>Gateway: Provision m365-egress-gateway<br/>+ dynamic route(s)
+    Eng->>Worker: Update wrangler.toml<br/>+ secrets + env types
+    Worker->>Gateway: env.AI.run(...) with metadata
+    Worker->>Access: Present OAuth token (SSO)
+    Worker->>Apps: Call with Access token (optional)
+    Access-->>Worker: Permit/deny based on policies
+    Gateway-->>Worker: Enforce egress controls<br/>(logs, DLP, rate limits)
+```
+
 ### Phase 1 – Establish the Security Perimeter
 
 1. Create a **Cloudflare Access** self-hosted application for `mcp.<domain>`.
@@ -50,16 +70,24 @@ no additional environment variables are necessary for the binding itself.
    - Service token policy for automation/CI use cases
 3. Validate by browsing to the Worker route; ensure Access blocks unauthenticated traffic.
 
-### Phase 2 – Deploy AI Gateway Control Plane
+### Phase 2 – Register the MCP Portal & Linked Apps
+
+1. Add the Worker as an Access for SaaS application (OIDC) following the [Secure MCP servers guide](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/mcp-servers/saas-mcp/).
+2. Record the SaaS application `id` (API: `GET /client/v4/accounts/:id/access/apps`).
+3. For each internal HTTP service the MCP server should call, create or update the Access policy to include a `linked_app_token` rule referencing the SaaS app `id` ([docs](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/mcp-servers/linked-apps/)).
+4. Update the self-hosted app configuration to require the new policy so tokens issued to the MCP portal are accepted.
+5. Expose the MCP portal via **Access → AI Controls → MCP Portals** and associate it with the SaaS app and Access policies.
+
+### Phase 3 – Deploy AI Gateway Control Plane
 
 1. Create an AI Gateway (e.g., `m365-egress-gateway`).
 2. Enable logging, caching, rate limiting, and DLP policies as required.
-3. Define dynamic routes:
+3. Define dynamic routes ([docs](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/)):
    - `dynamic/microsoft-graph-handler` – proxies Microsoft Graph requests
    - Additional routes for LLM/tooling integrations (optional)
 4. (Optional) Issue a gateway service token for worker authentication.
 
-### Phase 3 – Refactor the Worker
+### Phase 4 – Refactor the Worker
 
 1. Update `wrangler.toml`
    - Remove `[vars]` blocks; rely on secrets only
@@ -67,7 +95,8 @@ no additional environment variables are necessary for the binding itself.
    - Confirm Durable Object binding (`MCP_OBJECT`) and routes
 2. Extend the TypeScript `Env` interface with `AI: Ai`, Access headers (`CF_Access_User`, etc.),
    and required secrets.
-3. Replace all `fetch` calls to Microsoft Graph with `env.AI.run(...)`:
+3. Replace all `fetch` calls to Microsoft Graph with `env.AI.run(...)`
+   ([binding reference](https://developers.cloudflare.com/ai-gateway/integrations/worker-binding-methods/)):
 
    ```ts
    await env.AI.run(
@@ -92,15 +121,16 @@ no additional environment variables are necessary for the binding itself.
 
 4. Centralise error handling around `env.AI.run` responses to translate gateway errors
    into MCP-friendly responses.
-5. Ensure tokens and secrets are always sourced from `env`, not imported constants.
+5. Optionally capture `env.AI.aiGatewayLogId` for correlation with gateway telemetry.
+6. Ensure tokens and secrets are always sourced from `env`, not imported constants.
 
-### Phase 4 – Deploy
+### Phase 5 – Deploy
 
 1. `npm install && npm run validate`
 2. `wrangler deploy --env production`
 3. Confirm Access headers reach the worker if you intend to log authenticated identities.
 
-### Phase 5 – Validation Checklist
+### Phase 6 – Validation Checklist
 
 - [ ] Access prompt enforced (SSO + MFA + device posture)
 - [ ] OAuth 2.1 flow completes; Microsoft consent screen appears

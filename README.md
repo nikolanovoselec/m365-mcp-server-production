@@ -53,6 +53,25 @@ clear ingress controls, governed egress, and auditable operations.
 5. **Deploy & Validate** – run `wrangler deploy --env production`, complete the Access SSO,
    Microsoft consent, and tool execution flow; confirm AI Gateway/Access telemetry.
 
+### Transformation at a Glance
+
+```mermaid
+flowchart LR
+    A[Early MCP Worker<br>Direct fetch + inline secrets] --> B[Phase 1<br>Cloudflare Access App]
+    B --> C[Phase 2<br>MCP Portal + Linked Apps]
+    C --> D[Phase 3<br>AI Gateway Dynamic Routes]
+    D --> E[Phase 4<br>Code Refactor<br>env.AI.run + metadata]
+    E --> F[Phase 5<br>Deploy & Validate<br>Access SSO • Gateway logs]
+```
+
+## Reference Material
+
+- Cloudflare docs – [AI Gateway binding methods](https://developers.cloudflare.com/ai-gateway/integrations/worker-binding-methods/)
+- Cloudflare docs – [Universal endpoint](https://developers.cloudflare.com/ai-gateway/usage/universal/)
+- Cloudflare docs – [Dynamic routing](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/)
+- Cloudflare docs – [Access linked apps for MCP servers](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/mcp-servers/linked-apps/)
+- Cloudflare GitHub – [AI Gateway MCP server](https://github.com/cloudflare/mcp-server-cloudflare/tree/main/apps/ai-gateway) (log tooling & OAuth patterns)
+
 ## Contributing
 
 All feature work, tool enhancements, or general documentation improvements should originate in

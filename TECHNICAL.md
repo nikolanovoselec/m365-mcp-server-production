@@ -16,6 +16,17 @@ Client (MCP) → Cloudflare Access → Worker (/sse) → Durable Object
                               Microsoft Graph / External APIs
 ```
 
+```mermaid
+stateDiagram-v2
+    [*] --> Access
+    Access --> Worker : SSO / JWT
+    Worker --> DurableObject : MCP Session
+    Worker --> Gateway : env.AI.run()
+    Gateway --> Graph : Dynamic Route
+    Gateway --> Worker : Response + Log ID
+    Worker --> [*] : Tool result to MCP client
+```
+
 1. **Cloudflare Access** acts as checkpoint #1 (perimeter). Requests without a valid Access token never
    reach the Worker. Identity, device posture, and service token claims can be surfaced through headers
    (`CF-Access-Authenticated-User-Email`, `CF-Access-Jwt-Assertion`).
@@ -93,10 +104,15 @@ const response = await env.AI.run(
 - **`path`**: Relative to Microsoft Graph base URL, allowing the gateway to centralise origin logic.
 - **Metadata**: Supply user identifier, MCP tool name, and correlation IDs so that gateway logs
   support incident response and analytics.
+- **Gateway helpers**: Capture `env.AI.aiGatewayLogId` for the most recent call or invoke
+  `env.AI.gateway("m365-egress-gateway").patchLog(...)` / `getLog(...)` when you need to append
+  metadata or fetch request bodies ([binding methods](https://developers.cloudflare.com/ai-gateway/integrations/worker-binding-methods/)).
 - **Error Handling**: The worker should translate non-2xx responses into structured MCP errors,
   indicating whether the issue is policy (429/DLP) vs Graph-specific (403/401).
 
 ## 4. Access Awareness
+
+Cloudflare Access for SaaS issues the OAuth token that the worker presents on each request. If the worker later needs to call internal HTTP applications, configure `linked_app_token` policies so the same token is honoured downstream ([docs](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/mcp-servers/linked-apps/)).
 
 The worker can read Access-derived headers to enrich logs or enforce additional checks, for example:
 
@@ -119,6 +135,7 @@ This data can be injected into the AI Gateway metadata payload for end-to-end tr
 ## 6. Logging & Observability
 
 - **AI Gateway**: Primary location for monitoring outbound traffic, rate limiting, and DLP violations.
+  - Dynamic routes expose provider/model decisions and quotas ([docs](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/)).
 - **Workers Tail**: Use `wrangler tail --metadata` to surface request IDs and Access identity info.
 - **Access Audit Logs**: Provide authentication history, device posture evaluation, and policy results.
 - **Microsoft Entra ID**: Audit application sign-ins to confirm OAuth flows remain compliant.

@@ -27,6 +27,48 @@ stateDiagram-v2
     Worker --> [*] : Tool result to MCP client
 ```
 
+### Access + OAuth Flow
+
+```mermaid
+sequenceDiagram
+    participant C as MCP Client
+    participant Access as Cloudflare Access
+    participant W as Worker
+    participant O as OAuth Provider
+    participant MS as Microsoft Entra
+
+    C->>Access: 1. Request /sse
+    Access-->>C: 2. Enforce SSO / MFA
+    C->>Access: 3. Present Access session
+    Access->>W: 4. Forward request + CF-Access headers
+    W->>O: 5. /authorize (approval + state)
+    O-->>C: 6. Approval dialog (first visit)
+    C->>O: 7. Approve + redirect
+    O->>MS: 8. Authorize user
+    MS-->>O: 9. Authorization code
+    O->>MS: 10. Token exchange
+    MS-->>O: 11. Access & refresh tokens
+    O->>W: 12. Persist tokens in props
+    W-->>C: 13. OAuth access token for MCP session
+```
+
+### AI Gateway Egress
+
+```mermaid
+sequenceDiagram
+    participant DO as Durable Object
+    participant W as Worker
+    participant G as AI Gateway
+    participant Graph as Microsoft Graph
+
+    DO->>W: 1. Tool call + Microsoft tokens
+    W->>G: 2. env.AI.run(dynamic route, metadata)
+    G->>Graph: 3. Forward request with policy controls
+    Graph-->>G: 4. API response
+    G-->>W: 5. Response + `aiGatewayLogId`
+    W->>DO: 6. Tool result (logs metadata + log ID)
+```
+
 1. **Cloudflare Access** acts as checkpoint #1 (perimeter). Requests without a valid Access token never
    reach the Worker. Identity, device posture, and service token claims can be surfaced through headers
    (`CF-Access-Authenticated-User-Email`, `CF-Access-Jwt-Assertion`).

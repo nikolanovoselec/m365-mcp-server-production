@@ -69,7 +69,7 @@ sequenceDiagram
 
     DO->>W: 1. Tool call + Microsoft tokens
     W->>G: 2. env.AI.run(dynamic route, metadata)
-    G->>Graph: 3. Forward request with policy controls
+    G->>Graph: 3. Forward request / policy controls
     Graph-->>G: 4. API response
     G-->>W: 5. Response + `aiGatewayLogId`
     W->>DO: 6. Tool result (logs metadata + log ID)
@@ -86,7 +86,7 @@ sequenceDiagram
 3. **AI Gateway** intercepts every outbound call. Dynamic routes encapsulate corporate policies: logging,
    caching, DLP, and rate limiting. Metadata from the Worker identifies the user and MCP tool invoked.
 
-- Diagram above replaces the upstream “direct fetch” flow: Access now guards `/sse`, and every Graph call is
+- Diagram above replaces the upstream “direct fetch” flow: Access now guards `/sse`, and every outbound channel is
   routed through AI Gateway before returning to the Durable Object.
 
 ## 2. Environment Contract

@@ -102,7 +102,7 @@ Around 260 lines of worker code (spread across `src/index.ts`, `src/microsoft-gr
 turn the open prototype into an enterprise-hardened Microsoft 365 Remote MCP Server. Security controls added:
 
 - **Cloudflare Access perimeter** – `/sse` now sits behind SSO/MFA/device posture, and Access headers reach the Durable Object for auditing.
-- **Cloudflare AI Gateway egress** – Every Graph call flows through dynamic routes with policy enforcement, logging, and DLP.
+- **Cloudflare AI Gateway egress** – Every outbound channel (Graph calls, MCP responses, prompt streaming) flows through dynamic routes with policy enforcement, logging, and DLP.
 - **Secret lifecycle via wrangler** – No credentials in `[vars]`; secrets are stored/rotated with `wrangler secret put`.
 - **Durable Object correlation** – Tool executions log the Cloudflare `aiGatewayLogId`, linking MCP activity to Gateway telemetry.
 - **Configuration hygiene** – Example configs rely on placeholders and current compatibility dates; production `wrangler.toml` consumes secrets exclusively.

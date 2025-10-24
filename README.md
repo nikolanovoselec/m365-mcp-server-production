@@ -90,8 +90,7 @@ flowchart LR
     D --> E[Phase 4<br>Code Refactor<br>env.AI.run + metadata]
     E --> F[Phase 5<br>Deploy & Validate<br>Access SSO • Gateway logs]
 ```
-- Change vs upstream: Access now fronts `/sse`, AI Gateway owns all Graph egress, and Durable Objects log
-  `aiGatewayLogId` values for audit trails. Upstream timeline:
+- Change vs upstream: Access now fronts `/sse`, every outbound channel (Graph API, MCP responses, streamed prompts) passes through AI Gateway for inspection/routing/DLP, and Durable Objects log `aiGatewayLogId` values for audit trails. Upstream timeline:
   https://github.com/nikolanovoselec/m365-mcp-server/blob/main/README.md#why-did-i-build-this
 
 

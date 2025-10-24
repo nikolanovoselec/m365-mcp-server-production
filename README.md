@@ -41,7 +41,20 @@ clear ingress controls, governed egress, and auditable operations.
 | Worker environment bindings | Drops local testing flags and adds the `AI` binding plus optional Cloudflare Access headers so runtime configuration is supplied exclusively via secrets. | Keep production deployments secret-driven and expose Access context to downstream handlers. | AI Gateway, Access, Durable Objects | [`src/index.ts#L30-L63`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/src/index.ts#L30-L63) |
 | Graph client transport | Introduces `GatewayMetadata`, proxies requests through `env.AI.run("dynamic/microsoft-graph-handler", …)`, and captures `aiGatewayLogId` after each call. | Ensure every Microsoft Graph request traverses Cloudflare AI Gateway with audit metadata available for incident response. | AI Gateway | [`src/microsoft-graph.ts#L66-L639`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/src/microsoft-graph.ts#L66-L639) |
 | Durable Object metadata + logging | Builds per-tool metadata from Access/Microsoft identities, forwards it to the Graph client, and logs the resulting gateway correlation ID. | Provide traceability between MCP tool executions, Access identities, and AI Gateway analytics without exposing raw tokens. | Access, AI Gateway, Durable Objects | [`src/microsoft-mcp-agent.ts#L109-L218`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/src/microsoft-mcp-agent.ts#L109-L218) |
-| Worker configuration | `wrangler.example.toml` and `.dev.vars.example` provide placeholder bindings, mandatory `[[ai]]` configuration, and explicit secret checklists for operators to copy before deployment. | Prevent accidental disclosure of tenant-specific identifiers and guide operators toward Cloudflare secret storage. | AI Gateway, Workers KV | ([`wrangler.example.toml`](wrangler.example.toml), [`.dev.vars.example`](.dev.vars.example)) |
+| Worker configuration | `wrangler.example.toml` provides placeholder bindings, mandatory `[[ai]]` configuration, and explicit instructions for Cloudflare secrets. | Prevent accidental disclosure of tenant-specific identifiers and guide operators toward Cloudflare secret storage. | AI Gateway, Workers KV | [`wrangler.example.toml`](wrangler.example.toml) |
+
+## Required Cloudflare Secrets
+
+| Secret | Purpose | Required |
+| --- | --- | --- |
+| `MICROSOFT_CLIENT_ID` | Microsoft Entra application (client) ID used during OAuth flows. | ✅ |
+| `MICROSOFT_TENANT_ID` | Microsoft Entra tenant identifier for token endpoints. | ✅ |
+| `GRAPH_API_VERSION` | Microsoft Graph API version (e.g., `v1.0`) used when constructing routes. | ✅ |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra application secret used for code/refresh exchanges. | ✅ |
+| `ENCRYPTION_KEY` | 32-byte hex key for encrypting Durable Object state and OAuth props. | ✅ |
+| `COOKIE_ENCRYPTION_KEY` | 32-byte hex key for Access approval cookie encryption. | ✅ |
+| `COOKIE_SECRET` | HMAC secret for signing Access approval cookies. | ✅ |
+| `AI_GATEWAY_SERVICE_TOKEN` | Service token for AI Gateway if policies require authenticated Worker access. | Optional |
 
 ## Repository Map
 

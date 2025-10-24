@@ -34,6 +34,15 @@ clear ingress controls, governed egress, and auditable operations.
   expose the gateway log identifier so investigations can pivot between Workers logs
   and gateway analytics.
 
+## How This Fork Differs from Upstream
+
+| Area | Description | Reasoning | Cloudflare components | Example lines |
+| --- | --- | --- | --- | --- |
+| Worker environment bindings | Drops local testing flags and adds the `AI` binding plus optional Cloudflare Access headers so runtime configuration is supplied exclusively via secrets. | Keep production deployments secret-driven and expose Access context to downstream handlers. | AI Gateway, Access, Durable Objects | [`src/index.ts#L30-L63`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/src/index.ts#L30-L63) |
+| Graph client transport | Introduces `GatewayMetadata`, proxies requests through `env.AI.run("dynamic/microsoft-graph-handler", …)`, and captures `aiGatewayLogId` after each call. | Ensure every Microsoft Graph request traverses Cloudflare AI Gateway with audit metadata available for incident response. | AI Gateway | [`src/microsoft-graph.ts#L66-L639`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/src/microsoft-graph.ts#L66-L639) |
+| Durable Object metadata + logging | Builds per-tool metadata from Access/Microsoft identities, forwards it to the Graph client, and logs the resulting gateway correlation ID. | Provide traceability between MCP tool executions, Access identities, and AI Gateway analytics without exposing raw tokens. | Access, AI Gateway, Durable Objects | [`src/microsoft-mcp-agent.ts#L109-L218`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/src/microsoft-mcp-agent.ts#L109-L218) |
+| Worker configuration | `wrangler.toml` and `.dev.vars` now ship with placeholders, mandatory `[[ai]]` bindings, and explicit secret checklists. | Prevent accidental disclosure of tenant-specific identifiers and guide operators toward Cloudflare secret storage. | AI Gateway, Workers KV | [`wrangler.toml#L1-L41`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/wrangler.toml#L1-L41), [`.dev.vars`](https://github.com/nikolanovoselec/m365-mcp-server-production/blob/main/.dev.vars) |
+
 ## Repository Map
 
 - [`OPERATIONS.md`](./OPERATIONS.md) – Phase-by-phase migration playbook, secret strategy,

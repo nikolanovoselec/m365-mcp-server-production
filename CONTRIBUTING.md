@@ -1,121 +1,55 @@
-# Contributing to Microsoft 365 MCP Server
+# Contributing – Production Transformation Track
 
-Thank you for your interest in contributing to the Microsoft 365 MCP Server project.
+This repository exists to document and maintain the enterprise hardening of
+[m365-mcp-server](https://github.com/nikolanovoselec/m365-mcp-server).
+All feature development, protocol changes, or Microsoft Graph enhancements should
+continue to land in the upstream project. Contributions here must keep both
+repositories aligned while focusing on production deployment, security controls,
+and operational resilience.
 
-## Development Setup
+## Contribution Areas
 
-### Prerequisites
+- Documentation covering Access, AI Gateway, or security posture updates
+- Production configuration changes (`wrangler.toml`, bindings, secret handling)
+- Operational scripts, validation checklists, or monitoring improvements
+- Bug fixes specific to the hardened environment (e.g., gateway error translation)
 
-- Node.js 18+
-- Microsoft 365 Business/Enterprise account with admin access
-- Cloudflare Workers account
-- Git
+## Workflow
 
-### Local Development
+1. Sync the latest changes from upstream `m365-mcp-server`.
+2. Apply or adjust production-specific patches in this repository.
+3. Run validation locally (`npm run validate`).
+4. Document notable adjustments in `OPERATIONS.md` and/or `TECHNICAL.md`.
+5. Submit a pull request summarising:
+   - Upstream baseline commit (if relevant)
+   - Production changes introduced
+   - Validation steps performed (Access, OAuth, AI Gateway)
 
-1. Fork and clone the repository
-2. Install dependencies: `npm install`
-3. Copy configuration files:
-   ```bash
-   cp .dev.vars.example .dev.vars
-   cp wrangler.example.toml wrangler.toml
-   ```
-4. Configure your Microsoft 365 and Cloudflare credentials
-5. Start development server: `npm run dev`
+## Local Environment
 
-## Code Standards
+Use the upstream repository for feature development workflows. When verifying
+production changes locally, mock AI Gateway calls or use a dedicated staging
+gateway to avoid polluting production telemetry.
 
-### TypeScript
+```bash
+npm install
+npm run validate
+wrangler deploy --env staging
+```
 
-- Follow existing TypeScript configurations
-- Ensure type safety with `npm run type-check`
-- Use proper error handling patterns
+Secrets should never be committed or stored in `.dev.vars` when working inside this
+repository. Prefer `wrangler secret` even for staging environments.
 
-### Code Quality
+## Code & Documentation Standards
 
-- Run linting: `npm run lint`
-- Format code: `npm run format`
-- Follow existing code style and patterns
+- Follow existing TypeScript, ESLint, and Prettier configurations.
+- Keep comments concise; favour documentation for detailed explanations.
+- Maintain professional tone and ensure docs link back to upstream material when needed.
 
-### Documentation
+## Review Expectations
 
-- Update relevant documentation for new features
-- Include code examples where appropriate
-- Maintain professional tone in all documentation
+- Pull requests must include evidence of AI Gateway and Access validation.
+- Changes affecting security boundaries require explicit testing notes.
+- Ensure backwards compatibility with existing Access policies and gateway routes.
 
-## Testing
-
-Currently, the project has minimal testing infrastructure. When contributing:
-
-- Manually test all changes thoroughly
-- Verify OAuth flows work correctly
-- Test Microsoft Graph API integrations
-- Ensure no breaking changes to existing functionality
-
-## Submission Process
-
-### Pull Requests
-
-1. Create a feature branch from `main`
-2. Make your changes with clear, focused commits
-3. Update documentation as needed
-4. Test your changes thoroughly
-5. Submit a pull request with:
-   - Clear description of changes
-   - Motivation for the changes
-   - Testing steps performed
-
-### Commit Messages
-
-- Use clear, descriptive commit messages
-- Focus on what the change accomplishes
-- Keep messages concise but informative
-
-## Code of Conduct
-
-### Professional Standards
-
-- Maintain professional communication
-- Respect other contributors' work and opinions
-- Focus on constructive feedback and solutions
-- Follow project coding standards consistently
-
-### Security Considerations
-
-- Never commit secrets or credentials
-- Use placeholder values in examples
-- Follow security best practices
-- Report security issues privately
-
-## Areas for Contribution
-
-### High Priority
-
-- Unit and integration test implementation
-- Additional Microsoft Graph API tools
-- Error handling improvements
-- Performance optimizations
-
-### Medium Priority
-
-- Documentation improvements
-- Code quality enhancements
-- Development workflow improvements
-- Example applications
-
-### Low Priority
-
-- Advanced features and extensions
-- Alternative authentication methods
-- Additional platform integrations
-
-## Getting Help
-
-- Review existing documentation in this repository
-- Check existing issues and discussions
-- Create an issue for questions or bug reports
-- Provide detailed information when reporting issues
-
-## License
-
-By contributing to this project, you agree that your contributions will be licensed under the same MIT License that covers the project.
+Thank you for helping maintain the production-ready posture of the Microsoft 365 MCP Server.

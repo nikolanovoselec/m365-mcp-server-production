@@ -112,6 +112,11 @@ export class MicrosoftMCPAgent extends McpAgent<Env, State, Props> {
         ? crypto.randomUUID()
         : `req-${Date.now().toString(36)}`;
 
+    /**
+     * Gateway metadata forms the audit envelope that travels with every Graph call.
+     * Prefer stable identifiers (Access headers, Microsoft props) so operations teams
+     * can reconstruct who triggered a tool and how it propagated.
+     */
     const metadata: GatewayMetadata = {
       userId:
         this.props?.id ??
@@ -142,6 +147,10 @@ export class MicrosoftMCPAgent extends McpAgent<Env, State, Props> {
     toolName: string,
     metadata: GatewayMetadata,
   ): void {
+    /**
+     * Persist the AI Gateway log ID alongside the tool invocation. This enables
+     * real-time troubleshooting by pivoting from Durable Object logs to Gateway analytics.
+     */
     const logId = this.graphClient.getLastGatewayLogId();
     if (!logId) {
       return;

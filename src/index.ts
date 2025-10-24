@@ -53,10 +53,10 @@ export interface Env {
    */
   OAUTH_KV: KVNamespace;
 
-  /** Cloudflare AI Gateway binding used for Microsoft Graph egress. */
+  /** Cloudflare AI Gateway binding used to route Microsoft Graph traffic through governed egress. */
   AI: Ai;
 
-  /** Optional Cloudflare Access headers for audit metadata. */
+  /** Optional Cloudflare Access headers surfaced when perimeter policies are enforced (best-effort). */
   CF_Access_Jwt_Assertion?: string;
   CF_Access_Authenticated_User_Email?: string;
   CF_Access_Authenticated_User_Id?: string;

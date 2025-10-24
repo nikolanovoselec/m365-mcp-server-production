@@ -28,7 +28,11 @@ clear ingress controls, governed egress, and auditable operations.
 3. **Egress Governance** – Route all outbound API calls (Microsoft Graph, LLMs, webhooks)
    through Cloudflare AI Gateway with metadata for logging and policy enforcement.
 4. **Operational Guardrails** – Maintain reproducible deployment, observability, and
-   incident response checklists suitable for regulated environments.
+  incident response checklists suitable for regulated environments.
+5. **Auditable Graph Egress** – All Microsoft Graph calls run through Cloudflare AI
+  Gateway with enriched metadata (`userId`, `userEmail`, `mcpTool`, `requestId`) and
+  expose the gateway log identifier so investigations can pivot between Workers logs
+  and gateway analytics.
 
 ## Repository Map
 

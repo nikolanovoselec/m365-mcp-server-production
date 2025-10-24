@@ -137,6 +137,7 @@ This data can be injected into the AI Gateway metadata payload for end-to-end tr
 
 - **AI Gateway**: Primary location for monitoring outbound traffic, rate limiting, and DLP violations.
   - Dynamic routes expose provider/model decisions and quotas ([docs](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/)).
+- **Gateway Log Correlation**: Every Graph request attaches metadata (`userId`, `userEmail`, `mcpTool`, `requestId`) and records the resulting `env.AI.aiGatewayLogId`. Durable Object logs emit this identifier so operators can jump directly to the corresponding entry inside the AI Gateway dashboard.
 - **Workers Tail**: Use `wrangler tail --metadata` to surface request IDs and Access identity info.
 - **Access Audit Logs**: Provide authentication history, device posture evaluation, and policy results.
 - **Microsoft Entra ID**: Audit application sign-ins to confirm OAuth flows remain compliant.

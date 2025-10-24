@@ -72,6 +72,10 @@ export interface GatewayMetadata {
   userId: string;
   mcpTool: string;
   requestId: string;
+  /**
+   * Optional identity fields enrich gateway logs so downstream analytics can correlate
+   * Access identities with Microsoft principals without exposing raw tokens.
+   */
   userEmail?: string;
   microsoftUserPrincipalName?: string;
   microsoftDisplayName?: string;
@@ -584,6 +588,10 @@ export class MicrosoftGraphClient {
     metadata?: GatewayMetadata,
   ): Promise<any> {
     const graphUrl = new URL(url);
+    /**
+     * AI Gateway expects an origin-relative path so that routing rules decide the upstream.
+     * Persist the original query string to avoid losing pagination or filter parameters.
+     */
     const requestPayload: {
       method: string;
       path: string;
@@ -602,6 +610,10 @@ export class MicrosoftGraphClient {
       requestPayload.headers["Content-Type"] = "application/json";
     }
 
+    /**
+     * Metadata drives AI Gateway analytics (user, tool invoked, correlation IDs).
+     * Only attach when upstream code supplies context to keep requests lightweight.
+     */
     const gatewayOptions = metadata
       ? {
           gateway: {
@@ -616,6 +628,10 @@ export class MicrosoftGraphClient {
       gatewayOptions,
     );
 
+    /**
+     * Cloudflare exposes the latest log ID via env.AI.aiGatewayLogId so operators can
+     * correlate Worker logs with Gateway dashboards. Cache it for the Durable Object.
+     */
     this.lastGatewayLogId = this.env.AI.aiGatewayLogId || undefined;
 
     if (!response.ok) {

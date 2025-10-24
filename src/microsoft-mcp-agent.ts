@@ -17,6 +17,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { MicrosoftGraphClient } from "./microsoft-graph";
+import type { GatewayMetadata } from "./microsoft-graph";
 import { Env } from "./index";
 
 /**
@@ -105,6 +106,59 @@ export class MicrosoftMCPAgent extends McpAgent<Env, State, Props> {
     };
   }
 
+  private createGatewayMetadata(toolName: string): GatewayMetadata {
+    const requestId =
+      typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `req-${Date.now().toString(36)}`;
+
+    const metadata: GatewayMetadata = {
+      userId:
+        this.props?.id ??
+        this.props?.userPrincipalName ??
+        "anonymous",
+      mcpTool: toolName,
+      requestId,
+    };
+
+    const effectiveEmail =
+      this.env.CF_Access_Authenticated_User_Email ?? this.props?.mail;
+    if (effectiveEmail) {
+      metadata.userEmail = effectiveEmail;
+    }
+
+    if (this.props?.userPrincipalName) {
+      metadata.microsoftUserPrincipalName = this.props.userPrincipalName;
+    }
+
+    if (this.props?.displayName) {
+      metadata.microsoftDisplayName = this.props.displayName;
+    }
+
+    return metadata;
+  }
+
+  private logGatewayTrace(
+    toolName: string,
+    metadata: GatewayMetadata,
+  ): void {
+    const logId = this.graphClient.getLastGatewayLogId();
+    if (!logId) {
+      return;
+    }
+
+    console.log(
+      JSON.stringify({
+        event: "ai-gateway-request",
+        tool: toolName,
+        aiGatewayLogId: logId,
+        requestId: metadata.requestId,
+        userId: metadata.userId,
+        userEmail: metadata.userEmail,
+      }),
+    );
+  }
+
   /**
    * Initializes MCP server and registers all available tools
    *
@@ -147,7 +201,9 @@ export class MicrosoftMCPAgent extends McpAgent<Env, State, Props> {
         }
 
         try {
-          await this.graphClient.sendEmail(accessToken, args);
+          const metadata = this.createGatewayMetadata("sendEmail");
+          await this.graphClient.sendEmail(accessToken, args, metadata);
+          this.logGatewayTrace("sendEmail", metadata);
           return {
             content: [
               { type: "text", text: `Email sent successfully to ${args.to}` },
@@ -184,10 +240,16 @@ Troubleshooting: If you see permission errors, ensure the app registration has M
         }
 
         try {
-          const emails = await this.graphClient.getEmails(accessToken, {
-            count: args.count,
-            folder: args.folder,
-          });
+          const metadata = this.createGatewayMetadata("getEmails");
+          const emails = await this.graphClient.getEmails(
+            accessToken,
+            {
+              count: args.count,
+              folder: args.folder,
+            },
+            metadata,
+          );
+          this.logGatewayTrace("getEmails", metadata);
 
           return {
             content: [{ type: "text", text: JSON.stringify(emails, null, 2) }],
@@ -222,10 +284,16 @@ Troubleshooting: If you see permission errors, ensure the app registration has M
         }
 
         try {
-          const results = await this.graphClient.searchEmails(accessToken, {
-            query: args.query,
-            count: args.count,
-          });
+          const metadata = this.createGatewayMetadata("searchEmails");
+          const results = await this.graphClient.searchEmails(
+            accessToken,
+            {
+              query: args.query,
+              count: args.count,
+            },
+            metadata,
+          );
+          this.logGatewayTrace("searchEmails", metadata);
           return {
             content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
           };
@@ -261,9 +329,15 @@ Troubleshooting: If you see permission errors, ensure the app registration has M
         }
 
         try {
-          const events = await this.graphClient.getCalendarEvents(accessToken, {
-            days: args.days,
-          });
+          const metadata = this.createGatewayMetadata("getCalendarEvents");
+          const events = await this.graphClient.getCalendarEvents(
+            accessToken,
+            {
+              days: args.days,
+            },
+            metadata,
+          );
+          this.logGatewayTrace("getCalendarEvents", metadata);
           return {
             content: [{ type: "text", text: JSON.stringify(events, null, 2) }],
           };
@@ -300,10 +374,13 @@ Troubleshooting: If you see permission errors, ensure the app registration has C
         }
 
         try {
+          const metadata = this.createGatewayMetadata("createCalendarEvent");
           const event = await this.graphClient.createCalendarEvent(
             accessToken,
             args,
+            metadata,
           );
+          this.logGatewayTrace("createCalendarEvent", metadata);
           return {
             content: [{ type: "text", text: `Event created: ${event.id}` }],
           };
@@ -342,7 +419,13 @@ Troubleshooting: If you see permission errors, ensure the app registration has C
         }
 
         try {
-          await this.graphClient.sendTeamsMessage(accessToken, args);
+          const metadata = this.createGatewayMetadata("sendTeamsMessage");
+          await this.graphClient.sendTeamsMessage(
+            accessToken,
+            args,
+            metadata,
+          );
+          this.logGatewayTrace("sendTeamsMessage", metadata);
           return { content: [{ type: "text", text: "Teams message sent" }] };
         } catch (error: any) {
           const errorMessage = error?.message || String(error);
@@ -376,10 +459,13 @@ Troubleshooting: If you see permission errors, ensure the app registration has C
         }
 
         try {
+          const metadata = this.createGatewayMetadata("createTeamsMeeting");
           const meeting = await this.graphClient.createTeamsMeeting(
             accessToken,
             args,
+            metadata,
           );
+          this.logGatewayTrace("createTeamsMeeting", metadata);
           return {
             content: [
               { type: "text", text: `Meeting created: ${meeting.joinWebUrl}` },
@@ -431,10 +517,16 @@ Troubleshooting: If you see permission errors, ensure the app registration has O
             /** Token decode failure - invalid or expired token */
           }
 
-          const contacts = await this.graphClient.getContacts(accessToken, {
-            count: args.count,
-            search: args.search,
-          });
+          const metadata = this.createGatewayMetadata("getContacts");
+          const contacts = await this.graphClient.getContacts(
+            accessToken,
+            {
+              count: args.count,
+              search: args.search,
+            },
+            metadata,
+          );
+          this.logGatewayTrace("getContacts", metadata);
           return {
             content: [
               { type: "text", text: JSON.stringify(contacts, null, 2) },
@@ -496,7 +588,12 @@ Troubleshooting: If you see permission errors, the Microsoft app registration ma
       }
 
       try {
-        const profile = await this.graphClient.getUserProfile(accessToken);
+        const metadata = this.createGatewayMetadata("resource:profile");
+        const profile = await this.graphClient.getUserProfile(
+          accessToken,
+          metadata,
+        );
+        this.logGatewayTrace("resource:profile", metadata);
         return {
           contents: [
             {
@@ -553,7 +650,12 @@ Troubleshooting: If you see permission errors, the Microsoft app registration ma
       }
 
       try {
-        const calendars = await this.graphClient.getCalendars(accessToken);
+        const metadata = this.createGatewayMetadata("resource:calendars");
+        const calendars = await this.graphClient.getCalendars(
+          accessToken,
+          metadata,
+        );
+        this.logGatewayTrace("resource:calendars", metadata);
         return {
           contents: [
             {
@@ -607,7 +709,9 @@ Troubleshooting: If you see permission errors, the Microsoft app registration ma
       }
 
       try {
-        const teams = await this.graphClient.getTeams(accessToken);
+        const metadata = this.createGatewayMetadata("resource:teams");
+        const teams = await this.graphClient.getTeams(accessToken, metadata);
+        this.logGatewayTrace("resource:teams", metadata);
         return {
           contents: [
             {

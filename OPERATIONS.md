@@ -105,17 +105,18 @@ sequenceDiagram
        headers: { Authorization: `Bearer ${token}` },
        path: "/v1.0/me/messages",
      },
-     {
-       gateway: {
-         id: "m365-egress-gateway",
-         metadata: {
-           userId,
-           mcpTool: "getEmails",
-           requestId,
-         },
-       },
-     },
-   );
+      {
+        gateway: {
+          id: "m365-egress-gateway",
+          metadata: {
+            userId,
+            mcpTool: "getEmails",
+            requestId,
+            userEmail: env.CF_Access_Authenticated_User_Email ?? props?.mail,
+          },
+        },
+      },
+    );
    ```
 
 4. Centralise error handling around `env.AI.run` responses to translate gateway errors
@@ -134,7 +135,7 @@ sequenceDiagram
 - [ ] Access prompt enforced (SSO + MFA + device posture)
 - [ ] OAuth 2.1 flow completes; Microsoft consent screen appears
 - [ ] Tools (`sendEmail`, `getEmails`, etc.) succeed via AI Gateway
-- [ ] AI Gateway dashboards contain traffic with metadata (`userId`, `mcpTool`)
+- [ ] AI Gateway dashboards contain traffic with metadata (`userId`, `mcpTool`, `userEmail`)
 - [ ] Access and Workers logs show consistent request IDs/correlation IDs
 - [ ] Durable Object state persists across tool calls
 

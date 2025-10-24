@@ -17,6 +17,7 @@
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
+import type { Ai } from "@cloudflare/workers-types";
 import { MicrosoftMCPAgent } from "./microsoft-mcp-agent";
 import { MicrosoftHandler } from "./microsoft-handler";
 
@@ -31,10 +32,6 @@ export interface Env {
   MICROSOFT_CLIENT_ID: string;
   MICROSOFT_TENANT_ID: string;
   GRAPH_API_VERSION: string;
-
-  /** Cloudflare Workers deployment configuration */
-  WORKER_DOMAIN: string /* Worker subdomain: "your-worker.your-subdomain.workers.dev" */;
-  PROTOCOL: string /* Protocol scheme: "https" for production, "http" for local dev */;
 
   /** Sensitive credentials - deployed via 'wrangler secret put' command */
   MICROSOFT_CLIENT_SECRET: string;
@@ -55,6 +52,14 @@ export interface Env {
    * to prevent runtime errors when OAuth Provider checks for client existence
    */
   OAUTH_KV: KVNamespace;
+
+  /** Cloudflare AI Gateway binding used for Microsoft Graph egress. */
+  AI: Ai;
+
+  /** Optional Cloudflare Access headers for audit metadata. */
+  CF_Access_Jwt_Assertion?: string;
+  CF_Access_Authenticated_User_Email?: string;
+  CF_Access_Authenticated_User_Id?: string;
 }
 
 /**

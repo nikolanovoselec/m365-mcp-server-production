@@ -95,6 +95,7 @@ const response = await env.AI.run(
         userId: this.props?.id ?? "unknown",
         mcpTool: "sendEmail",
         requestId,
+        userEmail: env.CF_Access_Authenticated_User_Email ?? this.props?.mail,
       },
     },
   },
@@ -144,7 +145,7 @@ This data can be injected into the AI Gateway metadata payload for end-to-end tr
 
 1. Access required and MFA enforced before reaching `/sse`.
 2. Secrets only exist within Cloudflare secret storage.
-3. AI Gateway metadata consistently labels requests (`userId`, `mcpTool`, `requestId`).
+3. AI Gateway metadata consistently labels requests (`userId`, `mcpTool`, `requestId`, `userEmail` when available).
 4. Logs contain no raw OAuth tokens or Microsoft responses beyond what is necessary.
 5. Deployment scripts run `npm run validate` to preserve lint/format/type safety.
 

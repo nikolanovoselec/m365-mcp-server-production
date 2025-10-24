@@ -68,6 +68,15 @@ export interface ContactsParams {
   search?: string;
 }
 
+export interface GatewayMetadata {
+  userId: string;
+  mcpTool: string;
+  requestId: string;
+  userEmail?: string;
+  microsoftUserPrincipalName?: string;
+  microsoftDisplayName?: string;
+}
+
 /**
  * Microsoft Graph API client class
  *
@@ -77,6 +86,7 @@ export interface ContactsParams {
 export class MicrosoftGraphClient {
   private env: Env;
   private baseUrl: string;
+  private lastGatewayLogId?: string;
 
   /**
    * Initializes Microsoft Graph API client
@@ -86,12 +96,21 @@ export class MicrosoftGraphClient {
   constructor(env: Env) {
     this.env = env;
     this.baseUrl = `https://graph.microsoft.com/${env.GRAPH_API_VERSION}`;
+    this.lastGatewayLogId = undefined;
+  }
+
+  public getLastGatewayLogId(): string | undefined {
+    return this.lastGatewayLogId;
   }
 
   // ============================================================================
   // EMAIL OPERATIONS
   // ============================================================================
-  async sendEmail(accessToken: string, params: EmailParams): Promise<any> {
+  async sendEmail(
+    accessToken: string,
+    params: EmailParams,
+    metadata?: GatewayMetadata,
+  ): Promise<any> {
     const url = `${this.baseUrl}/me/sendMail`;
 
     const body = {
@@ -114,27 +133,45 @@ export class MicrosoftGraphClient {
       url,
       "POST",
       body,
+      metadata,
     );
     return response;
   }
 
-  async getEmails(accessToken: string, params: EmailListParams): Promise<any> {
+  async getEmails(
+    accessToken: string,
+    params: EmailListParams,
+    metadata?: GatewayMetadata,
+  ): Promise<any> {
     const folder = params.folder || "inbox";
     const count = Math.min(params.count || 10, 50);
     const url = `${this.baseUrl}/me/mailFolders/${folder}/messages?$top=${count}&$select=id,subject,from,receivedDateTime,bodyPreview,isRead`;
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
     return response.value || [];
   }
 
   async searchEmails(
     accessToken: string,
     params: EmailSearchParams,
+    metadata?: GatewayMetadata,
   ): Promise<any> {
     const count = Math.min(params.count || 10, 50);
     const url = `${this.baseUrl}/me/messages?$search="${encodeURIComponent(params.query)}"&$top=${count}&$select=id,subject,from,receivedDateTime,bodyPreview`;
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
     return response.value || [];
   }
 
@@ -144,6 +181,7 @@ export class MicrosoftGraphClient {
   async getCalendarEvents(
     accessToken: string,
     params: CalendarListParams,
+    metadata?: GatewayMetadata,
   ): Promise<any> {
     const days = Math.min(params.days || 7, 30);
     const startTime = new Date().toISOString();
@@ -153,13 +191,20 @@ export class MicrosoftGraphClient {
 
     const url = `${this.baseUrl}/me/calendarView?startDateTime=${startTime}&endDateTime=${endTime}&$select=id,subject,start,end,attendees,organizer,webLink`;
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
     return response.value || [];
   }
 
   async createCalendarEvent(
     accessToken: string,
     params: CalendarEventParams,
+    metadata?: GatewayMetadata,
   ): Promise<any> {
     const url = `${this.baseUrl}/me/events`;
 
@@ -189,14 +234,24 @@ export class MicrosoftGraphClient {
       url,
       "POST",
       body,
+      metadata,
     );
     return response;
   }
 
-  async getCalendars(accessToken: string): Promise<any> {
+  async getCalendars(
+    accessToken: string,
+    metadata?: GatewayMetadata,
+  ): Promise<any> {
     const url = `${this.baseUrl}/me/calendars?$select=id,name,color,canEdit,owner`;
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
     return response.value || [];
   }
 
@@ -206,6 +261,7 @@ export class MicrosoftGraphClient {
   async sendTeamsMessage(
     accessToken: string,
     params: TeamsMessageParams,
+    metadata?: GatewayMetadata,
   ): Promise<any> {
     const url = `${this.baseUrl}/teams/${params.teamId}/channels/${params.channelId}/messages`;
 
@@ -221,6 +277,7 @@ export class MicrosoftGraphClient {
       url,
       "POST",
       body,
+      metadata,
     );
     return response;
   }
@@ -228,6 +285,7 @@ export class MicrosoftGraphClient {
   async createTeamsMeeting(
     accessToken: string,
     params: TeamsMeetingParams,
+    metadata?: GatewayMetadata,
   ): Promise<any> {
     const url = `${this.baseUrl}/me/onlineMeetings`;
 
@@ -252,21 +310,35 @@ export class MicrosoftGraphClient {
       url,
       "POST",
       body,
+      metadata,
     );
     return response;
   }
 
-  async getTeams(accessToken: string): Promise<any> {
+  async getTeams(
+    accessToken: string,
+    metadata?: GatewayMetadata,
+  ): Promise<any> {
     const url = `${this.baseUrl}/me/joinedTeams?$select=id,displayName,description,webUrl`;
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
     return response.value || [];
   }
 
   // ============================================================================
   // CONTACT OPERATIONS
   // ============================================================================
-  async getContacts(accessToken: string, params: ContactsParams): Promise<any> {
+  async getContacts(
+    accessToken: string,
+    params: ContactsParams,
+    metadata?: GatewayMetadata,
+  ): Promise<any> {
     const count = Math.min(params.count || 50, 100);
 
     // Use /me/people to get contacts from all sources (personal, GAL, etc.)
@@ -277,7 +349,13 @@ export class MicrosoftGraphClient {
       url += `&$search="${encodeURIComponent(params.search)}"`;
     }
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
 
     /** Transform Microsoft Graph person objects to simplified contact format */
     const contacts =
@@ -304,10 +382,19 @@ export class MicrosoftGraphClient {
   // ============================================================================
   // USER PROFILE OPERATIONS
   // ============================================================================
-  async getUserProfile(accessToken: string): Promise<any> {
+  async getUserProfile(
+    accessToken: string,
+    metadata?: GatewayMetadata,
+  ): Promise<any> {
     const url = `${this.baseUrl}/me?$select=id,displayName,mail,userPrincipalName,jobTitle,department,companyName`;
 
-    const response = await this.makeGraphRequest(accessToken, url, "GET");
+    const response = await this.makeGraphRequest(
+      accessToken,
+      url,
+      "GET",
+      undefined,
+      metadata,
+    );
     return response;
   }
 
@@ -494,23 +581,42 @@ export class MicrosoftGraphClient {
     url: string,
     method: string = "GET",
     body?: any,
-    _retryCount: number = 0,
+    metadata?: GatewayMetadata,
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    };
-
-    const requestOptions: RequestInit = {
+    const graphUrl = new URL(url);
+    const requestPayload: {
+      method: string;
+      path: string;
+      headers: Record<string, string>;
+      body?: string;
+    } = {
       method,
-      headers,
+      path: `${graphUrl.pathname}${graphUrl.search}`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     };
 
     if (body && method !== "GET") {
-      requestOptions.body = JSON.stringify(body);
+      requestPayload.body = JSON.stringify(body);
+      requestPayload.headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(url, requestOptions);
+    const gatewayOptions = metadata
+      ? {
+          gateway: {
+            metadata: this.formatGatewayMetadata(metadata),
+          },
+        }
+      : undefined;
+
+    const response = await this.env.AI.run(
+      "dynamic/microsoft-graph-handler",
+      requestPayload,
+      gatewayOptions,
+    );
+
+    this.lastGatewayLogId = this.env.AI.aiGatewayLogId || undefined;
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -521,14 +627,7 @@ export class MicrosoftGraphClient {
         errorData = { error: { message: errorText } };
       }
 
-      /**
-       * Authentication errors (401/403) may indicate:
-       * - Token expiration (OAuth Provider handles refresh)
-       * - Missing permissions (requires admin consent)
-       * - Invalid scopes for requested operation
-       */
       if (response.status === 401 || response.status === 403) {
-        /** Generate context-specific error message based on endpoint */
         const specificError = this.getSpecificErrorMessage(
           url,
           response.status,
@@ -541,12 +640,10 @@ export class MicrosoftGraphClient {
       throw new Error(errorMessage);
     }
 
-    /** Handle 204 No Content responses (common for POST operations like sendMail) */
     if (response.status === 204) {
       return {};
     }
 
-    /** Verify JSON content type before parsing */
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       return {};
@@ -554,14 +651,36 @@ export class MicrosoftGraphClient {
 
     const responseText = await response.text();
 
-    let responseData;
     try {
-      responseData = JSON.parse(responseText);
+      return JSON.parse(responseText);
     } catch (jsonError) {
       throw new Error(`Failed to parse JSON response: ${jsonError}`);
     }
+  }
 
-    return responseData;
+  private formatGatewayMetadata(
+    metadata: GatewayMetadata,
+  ): Record<string, string> {
+    const gatewayMetadata: Record<string, string> = {
+      userId: metadata.userId,
+      mcpTool: metadata.mcpTool,
+      requestId: metadata.requestId,
+    };
+
+    if (metadata.userEmail) {
+      gatewayMetadata.userEmail = metadata.userEmail;
+    }
+
+    if (metadata.microsoftUserPrincipalName) {
+      gatewayMetadata.microsoftUserPrincipalName =
+        metadata.microsoftUserPrincipalName;
+    }
+
+    if (metadata.microsoftDisplayName) {
+      gatewayMetadata.microsoftDisplayName = metadata.microsoftDisplayName;
+    }
+
+    return gatewayMetadata;
   }
 
   /**
@@ -585,13 +704,20 @@ export class MicrosoftGraphClient {
     accessToken: string,
     initialUrl: string,
     maxPages: number = 10,
+    metadata?: GatewayMetadata,
   ): Promise<T[]> {
     const results: T[] = [];
     let url = initialUrl;
     let pageCount = 0;
 
     while (url && pageCount < maxPages) {
-      const response = await this.makeGraphRequest(accessToken, url, "GET");
+      const response = await this.makeGraphRequest(
+        accessToken,
+        url,
+        "GET",
+        undefined,
+        metadata,
+      );
 
       if (response.value) {
         results.push(...response.value);

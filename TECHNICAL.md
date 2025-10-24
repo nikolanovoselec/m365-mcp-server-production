@@ -13,7 +13,7 @@ graph TB
     Client[MCP Client] --> Entry[Worker Entry Point]
     Entry --> Access[Cloudflare Access]
     Access --> OAuth[OAuth Provider]
-    OAuth --> SSE[/sse Endpoint]
+    OAuth --> SSE["/sse Endpoint"]
     SSE --> DO[Durable Object]
     DO --> Gateway[AI Gateway]
     Gateway --> Graph[Microsoft Graph]

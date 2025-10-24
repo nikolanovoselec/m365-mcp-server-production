@@ -9,14 +9,15 @@ and the environment contract that binds everything together.
 ## 1. Architectural Overview
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Access
-    Access --> Worker : SSO / JWT
-    Worker --> DurableObject : MCP Session
-    Worker --> Gateway : env.AI.run()
-    Gateway --> Graph : Dynamic Route
-    Gateway --> Worker : Response + Log ID
-    Worker --> [*] : Tool result to MCP client
+graph TB
+    Client[MCP Client] --> Entry[Worker Entry Point]
+    Entry --> Access[Cloudflare Access]
+    Access --> OAuth[OAuth Provider]
+    OAuth --> SSE[/sse Endpoint]
+    SSE --> DO[Durable Object]
+    DO --> Gateway[AI Gateway]
+    Gateway --> Graph[Microsoft Graph]
+    Access -->|CF-Access headers| DO
 ```
 
 *Change vs upstream:* the original worker exposed `/sse` directly and called Microsoft Graph with inline

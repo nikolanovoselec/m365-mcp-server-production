@@ -1,0 +1,10 @@
+# Local Development Environment Variables
+# Copy this file to .dev.vars and replace placeholders with actual values
+# DO NOT commit .dev.vars - it contains sensitive data
+
+# Microsoft Entra ID Configuration
+MICROSOFT_CLIENT_ID=YOUR_ENTRA_ID_CLIENT_ID
+MICROSOFT_CLIENT_SECRET=YOUR_ENTRA_ID_CLIENT_SECRET
+MICROSOFT_TENANT_ID=YOUR_ENTRA_ID_TENANT_ID
+ENCRYPTION_KEY=YOUR_32_BYTE_HEX_ENCRYPTION_KEY_HERE
+GRAPH_API_VERSION=v1.0

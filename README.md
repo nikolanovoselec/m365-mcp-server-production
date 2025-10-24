@@ -45,16 +45,16 @@ clear ingress controls, governed egress, and auditable operations.
 
 ## Required Cloudflare Secrets
 
-| Secret | Purpose | Required |
-| --- | --- | --- |
-| `MICROSOFT_CLIENT_ID` | Microsoft Entra application (client) ID used during OAuth flows. | ✅ |
-| `MICROSOFT_TENANT_ID` | Microsoft Entra tenant identifier for token endpoints. | ✅ |
-| `GRAPH_API_VERSION` | Microsoft Graph API version (e.g., `v1.0`) used when constructing routes. | ✅ |
-| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra application secret used for code/refresh exchanges. | ✅ |
-| `ENCRYPTION_KEY` | 32-byte hex key for encrypting Durable Object state and OAuth props. | ✅ |
-| `COOKIE_ENCRYPTION_KEY` | 32-byte hex key for Access approval cookie encryption. | ✅ |
-| `COOKIE_SECRET` | HMAC secret for signing Access approval cookies. | ✅ |
-| `AI_GATEWAY_SERVICE_TOKEN` | Service token for AI Gateway if policies require authenticated Worker access. | Optional |
+| Secret | Purpose | Required | Provisioning |
+| --- | --- | --- | --- |
+| `MICROSOFT_CLIENT_ID` | Microsoft Entra application (client) ID used during OAuth flows. | ✅ | `wrangler secret put MICROSOFT_CLIENT_ID` |
+| `MICROSOFT_TENANT_ID` | Microsoft Entra tenant identifier for token endpoints. | ✅ | `wrangler secret put MICROSOFT_TENANT_ID` |
+| `GRAPH_API_VERSION` | Microsoft Graph API version (e.g., `v1.0`) used when constructing routes. | ✅ | `wrangler secret put GRAPH_API_VERSION` |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra application secret used for code/refresh exchanges. Must never live in `wrangler.toml` or environment variables. | ✅ | `wrangler secret put MICROSOFT_CLIENT_SECRET` |
+| `ENCRYPTION_KEY` | 32-byte hex key for encrypting Durable Object state and OAuth props. | ✅ | `wrangler secret put ENCRYPTION_KEY` |
+| `COOKIE_ENCRYPTION_KEY` | 32-byte hex key for Access approval cookie encryption. | ✅ | `wrangler secret put COOKIE_ENCRYPTION_KEY` |
+| `COOKIE_SECRET` | HMAC secret for signing Access approval cookies. | ✅ | `wrangler secret put COOKIE_SECRET` |
+| `AI_GATEWAY_SERVICE_TOKEN` | Service token for AI Gateway if policies require authenticated Worker access. | Optional | `wrangler secret put AI_GATEWAY_SERVICE_TOKEN` |
 
 ## Repository Map
 

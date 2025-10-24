@@ -14,10 +14,14 @@ graph TB
     Entry --> Access[Cloudflare Access]
     Access --> OAuth[OAuth Provider]
     OAuth --> SSE["/sse Endpoint"]
-    SSE --> DO[Durable Object]
-    DO --> Gateway[AI Gateway]
+    SSE --> DO1[Discovery Durable Object]
+    SSE --> DO2[Authenticated Durable Object]
+    DO2 --> Gateway[AI Gateway]
     Gateway --> Graph[Microsoft Graph]
-    Access -->|CF-Access headers| DO
+    Access -->|CF-Access headers| DO2
+
+    OAuth --> KV1[OAUTH_KV]
+    DO2 --> KV2[CONFIG_KV]
 ```
 
 *Change vs upstream:* the original worker exposed `/sse` directly and called Microsoft Graph with inline

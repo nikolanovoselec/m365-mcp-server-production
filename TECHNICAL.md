@@ -8,14 +8,6 @@ and the environment contract that binds everything together.
 
 ## 1. Architectural Overview
 
-```
-Client (MCP) → Cloudflare Access → Worker (/sse) → Durable Object
-                                        ↓
-                                AI Gateway (m365-egress-gateway)
-                                        ↓
-                              Microsoft Graph / External APIs
-```
-
 ```mermaid
 stateDiagram-v2
     [*] --> Access
@@ -83,6 +75,9 @@ sequenceDiagram
    Microsoft OAuth 2.1 storage and dual-token props.
 3. **AI Gateway** intercepts every outbound call. Dynamic routes encapsulate corporate policies: logging,
    caching, DLP, and rate limiting. Metadata from the Worker identifies the user and MCP tool invoked.
+
+- Diagram above replaces the upstream “direct fetch” flow: Access now guards `/sse`, and every Graph call is
+  routed through AI Gateway before returning to the Durable Object.
 
 ## 2. Environment Contract
 
